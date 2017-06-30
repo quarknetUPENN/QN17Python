@@ -1,4 +1,4 @@
-# The main script.  Run this script to run the program
+# The main script.  Run this script to analyze a .gon event file
 from holder import *
 import circlecalc as cc
 import numpy as np
@@ -6,8 +6,12 @@ import matplotlib.pyplot as plt
 
 # define what to plot
 plotTubes = True
+plotTubeLabels = True
+plotPaddles = True
 plotHitCircles = True
-plotPossibleTanLines = True
+plotAllPossibleTanLines = True
+plotPaddleTanLines = True
+plotAverageTanLine = True
 
 #******************Load tube position data*****************#
 # get the x,y positions of each tube in m.  load them into a dict using names as keys
@@ -34,13 +38,20 @@ with open("sampledata/event1.gon", "r") as file:
 
 #******************Find possible tan lines*******************#
 # list to be filled with tanLine objects representing every possible tan line for every pair of tubehits
-tanList = []
+rawTanList = []
 # fill tanList by iterating through every combination of tubehits
 for i in range(len(dataArray)):
     for j in range(i+1, len(dataArray)):
-        tanList = tanList + cc.possibleTan(dataArray[i], dataArray[j])
-
-
+        rawTanList = rawTanList + cc.possibleTan(dataArray[i], dataArray[j])
+# list filled with tanLine objects representing only lines that pass through both paddles
+paddleTanList = cc.removeSideTanLines(rawTanList)
+# look for avg tan line in terms of slope, intercept
+m, b = 0, 0
+for line in paddleTanList:
+    m = m + line.m
+    b = b + line.b
+# the average tan line
+avgLine = tanLine(m/len(paddleTanList), b/len(paddleTanList))
 
 # ***********************Draw everything**********************#
 # create the drawing
@@ -49,15 +60,35 @@ fig, ax = plt.subplots()
 if plotTubes:
     for name, pos in tubepos.items():
         ax.add_artist(plt.Circle(pos, OUTER_RADIUS, fill=False, color='black'))
+        if plotTubeLabels:
+            ax.text(pos[0], pos[1], name, size=8, ha="center", va="center")
 # draw all hit circles if requested
 if plotHitCircles:
     for hit in dataArray:
         ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='blue'))
+# draw both paddles if requested
+if plotPaddles:
+    ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MIN_Y, PADDLE_MIN_Y], color='black', lw=10, label="Scintillator Paddle")
+    ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MAX_Y, PADDLE_MAX_Y], color='black', lw=10)
 # draw all possible tan lines if requested
-if plotPossibleTanLines:
-    for line in tanList:
-        fig.plot([0, 1], [line.y(0), line.y(1)], color="green")
+if plotAllPossibleTanLines:
+    for line in rawTanList:
+        lab, = ax.plot([0, 1], [line.y(0), line.y(1)], color="green", ls="--", lw=0.5)
+    lab.set_label("All Tangent Lines")
+# draw all tan lines through paddle if requested
+if plotPaddleTanLines:
+    for line in paddleTanList:
+        lab, = ax.plot([0, 1], [line.y(0), line.y(1)], color="green", ls="-", lw=1)
+    lab.set_label("Paddle Tangent Lines")
+# draw average tan line if requested
+if plotAverageTanLine:
+    lab, = ax.plot([0, 1], [avgLine.y(0), avgLine.y(1)], color="red", ls="-", lw=2)
+    lab.set_label("Average Tangent Line")
+# draw legend to right of graph
+lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+
 # size the drawing and save it
 plt.xlim((0, 0.5))
 plt.ylim((0, 0.5))
-fig.savefig("name.png")
+fig.savefig("name.png", bbox_extra_artists=(lgd,), bbox_inches="tight")

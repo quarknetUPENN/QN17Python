@@ -3,8 +3,10 @@
 OUTER_RADIUS = 0.0127
 WIRE_RADIUS = 0.00005
 DRIFT_VELOCITY = 60000
-PADDLE_MIN_X = 0
-PADDLE_MAX_X = 0.5
+PADDLE_MIN_X = 0.07
+PADDLE_MAX_X = 0.3
+PADDLE_MIN_Y = 0
+PADDLE_MAX_Y = 0.5
 
 # Holder class for an event that triggers a tube
 class tubehit:
@@ -30,4 +32,7 @@ class tanLine:
     def y(self, x):
         return self.m * x + self.b
 
+    # return the value of the x coord for a given y coord
+    def x(self, y):
+        return (y-self.b)/self.m
 

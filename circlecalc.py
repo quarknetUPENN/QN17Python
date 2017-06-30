@@ -1,4 +1,4 @@
-# A file to hold functions relating to calclations on the circles
+# A file to hold functions relating to calculations on the circles
 from holder import *
 from numpy import sqrt
 
@@ -32,3 +32,13 @@ def possibleTan(tubehit1, tubehit2):
 
                 tanList.append(tanLine(slope, intercept))
     return tanList
+
+# given a list of tanLines, removes all of those that don't pass through both paddles
+# returns this new list of tanLines
+def removeSideTanLines(tanList):
+    newList = []
+    for line in tanList:
+        if not (line.x(PADDLE_MAX_Y) > PADDLE_MAX_X or line.x(PADDLE_MAX_Y) < PADDLE_MIN_X or
+                line.x(PADDLE_MIN_Y) > PADDLE_MAX_X or line.x(PADDLE_MIN_Y) < PADDLE_MIN_X):
+            newList.append(line)
+    return newList
