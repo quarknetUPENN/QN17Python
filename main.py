@@ -18,7 +18,7 @@ plotConfig = {"showTubes": True,
               "showHitCircles": True,
               "showAllPossibleTanLines": True,
               "showPaddleTanLines": True,
-              "showAverageTanLine": True}
+              "showAverageTanLine": False}
 
 # ******************Load tube position data***************** #
 # using numpy, get the x,y positions of each tube in m.  load them into a dict using names as keys
@@ -103,3 +103,23 @@ for gon in glob("*.gon"):
     plt.xlim((0, 0.5))
     plt.ylim((0, 0.5))
     fig.savefig(imgDir+"/"+gon[:-4]+".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
+
+    m = []
+    b = []
+    for line in paddleTanList:
+        m.append(line.m)
+        b.append(line.b)
+    print(len(m))
+    print(len(b))
+
+    fig, ax = plt.subplots()
+    ax.scatter(m, b, marker=".")
+    #ax.set_xlim((-190,-180))
+    #ax.set_ylim((40,50))
+    fig.savefig(imgDir+"/"+gon[:-4]+"bVm"+".png")
+    fig, ax = plt.subplots()
+    ax.boxplot(m)
+    fig.savefig(imgDir+"/"+gon[:-4]+"mhist"+".png")
+    fig, ax = plt.subplots()
+    ax.boxplot(b)
+    fig.savefig(imgDir+"/"+gon[:-4]+"bhist"+".png")
