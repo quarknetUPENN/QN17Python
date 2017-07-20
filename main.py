@@ -4,6 +4,8 @@ import circlecalc as cc
 import matplotlib.pyplot as plt
 from numpy import loadtxt
 from glob import glob
+from sklearn.cluster import DBSCAN
+from numpy import column_stack
 import os
 
 # folder in which to find the data.  this can be relative or absolute path
@@ -111,6 +113,13 @@ for gon in glob("*.gon"):
         b.append(line.b)
     print(len(m))
     print(len(b))
+    #print(m)
+    #print(b)
+
+    #slopeint = column_stack((m,b))
+    #print(slopeint)
+    slopeintcoors = list(zip(m,b))
+    print(slopeintcoors)
 
     fig, ax = plt.subplots()
     ax.scatter(m, b, marker=".")
@@ -123,3 +132,12 @@ for gon in glob("*.gon"):
     fig, ax = plt.subplots()
     ax.boxplot(b)
     fig.savefig(imgDir+"/"+gon[:-4]+"bhist"+".png")
+
+    #implementing DBSCAN(based on 2016 parameters)
+    db = DBSCAN(eps=0.8, min_samples = 5).fit(slopeintcoors)
+    labels = db.labels_
+    #returns the number of clusters given by DBSCAN
+    n_clusters= len(set(labels)) - (1 if -1 in labels else 0)
+    print(n_clusters)
+
+
