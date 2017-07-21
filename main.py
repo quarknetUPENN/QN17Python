@@ -140,4 +140,3 @@ for gon in glob("*.gon"):
     n_clusters= len(set(labels)) - (1 if -1 in labels else 0)
     print(n_clusters)
 
-
