@@ -134,25 +134,6 @@ for gon in glob("*.gon"):
     #print(m)
     #print(b)
 
-    #slopeint = column_stack((m,b))
-    #print(slopeint)
-    slopeintcoors = list(zip(m,b))
-    print(slopeintcoors)
-    array = np.array(slopeintcoors)
-    #print(array)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     # print(__distanceFromTubehitToTanline(dataArray[0], tanLine(3,2)))
     # print(__tanlineCostCalculator(tanLine(3,2), dataArray))
