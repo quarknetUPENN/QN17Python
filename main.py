@@ -4,7 +4,25 @@ import circlecalc as cc
 import matplotlib.pyplot as plt
 from numpy import loadtxt
 from glob import glob
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+import numpy as np
 import os
+import tanlineoptimizer as tlo
+
+
+def __histogramPeakFinder(data):
+    (n,bins, patches) = plt.hist(data)
+    n = np.array(n)
+    print(n)
+    binedge = bins[np.argmax(n)]
+    print("Left bin edge: " + str(binedge))
+    binwidth = (max(m)-min(m))/plt.rcParams["hist.bins"]
+    print("Binwidth: " + str(binwidth))
+    print("Right bin edge: " + str(binedge + binwidth))
+    return [binedge, binedge + binwidth]
+
+
 
 # folder in which to find the data.  this can be relative or absolute path
 dataDir = "sampledata/"
@@ -16,8 +34,8 @@ plotConfig = {"showTubes": True,
               "showTubeLabels": True,
               "showPaddles": True,
               "showHitCircles": True,
-              "showAllPossibleTanLines": True,
-              "showPaddleTanLines": True,
+              "showAllPossibleTanLines": False,
+              "showPaddleTanLines": False,
               "showAverageTanLine": False}
 
 # ******************Load tube position data***************** #
@@ -99,10 +117,12 @@ for gon in glob("*.gon"):
     # draw legend to right of graph
     lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
+
+
     # size the drawing and save it into the imgDir
     plt.xlim((0, 0.5))
     plt.ylim((0, 0.5))
-    fig.savefig(imgDir+"/"+gon[:-4]+".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
+
 
     m = []
     b = []
@@ -111,6 +131,47 @@ for gon in glob("*.gon"):
         b.append(line.b)
     print(len(m))
     print(len(b))
+    #print(m)
+    #print(b)
+
+    #slopeint = column_stack((m,b))
+    #print(slopeint)
+    slopeintcoors = list(zip(m,b))
+    print(slopeintcoors)
+    array = np.array(slopeintcoors)
+    #print(array)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # print(__distanceFromTubehitToTanline(dataArray[0], tanLine(3,2)))
+    # print(__tanlineCostCalculator(tanLine(3,2), dataArray))
+
+    cost = {}
+    mrange = __histogramPeakFinder(m)
+    brange = __histogramPeakFinder(b)
+    for m2 in np.arange(mrange[0], mrange[1]):
+        for b2 in np.arange(brange[0], brange[1]):
+            cost[tlo.tanlineCostCalculator(tanLine(m2,b2), dataArray)] = tanLine(m2,b2)
+    # for line in cost.values():
+    #     print(line.toString())
+
+    print(cost[min(cost.keys())].toString())
+    bestline =  (cost[min(cost.keys())])
+
+    ax.plot([0,1], [bestline.y(0), bestline.y(1)], color = "b", lw = "3")
+
+    fig.savefig(imgDir+"/"+gon[:-4]+".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
 
     fig, ax = plt.subplots()
     ax.scatter(m, b, marker=".")
@@ -118,8 +179,44 @@ for gon in glob("*.gon"):
     #ax.set_ylim((40,50))
     fig.savefig(imgDir+"/"+gon[:-4]+"bVm"+".png")
     fig, ax = plt.subplots()
-    ax.boxplot(m)
+    ax.hist(m)
     fig.savefig(imgDir+"/"+gon[:-4]+"mhist"+".png")
     fig, ax = plt.subplots()
-    ax.boxplot(b)
+    ax.hist(b)
     fig.savefig(imgDir+"/"+gon[:-4]+"bhist"+".png")
+
+
+
+
+    # #implementing DBSCAN(based on 2016 parameters)
+    # db = DBSCAN(eps=0.8, min_samples = 5).fit(array)
+    # core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    # core_samples_mask[db.core_sample_indices_] = True
+    # labels = db.labels_
+    # #returns the number of clusters given by DBSCAN
+    # n_clusters= len(set(labels)) - (1 if -1 in labels else 0)
+    # print(n_clusters)
+    #
+    #
+    # unique_labels = set(labels)
+    # colors = [plt.cm.Spectral(each)
+    #           for each in np.linspace(0, 1, len(unique_labels))]
+    # for k, col in zip(unique_labels, colors):
+    #     if k == -1:
+    #         # Black used for noise.
+    #         col = 'k'
+    #
+    #     class_member_mask = (labels == k)
+    #
+    #
+    #
+    # xy = array[class_member_mask & core_samples_mask]
+    # plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor= col, markeredgecolor='k', markersize=14)
+    #
+    # xy = array[class_member_mask & ~core_samples_mask]
+    # plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor= col , markeredgecolor='k', markersize=6)
+    #
+    # #plt.title('Estimated number of clusters: %d' % n_clusters)
+    # plt.show()
+    #
+    # #plt.savefig(imgDir+"/"+gon[:-4]+"dbscan1"+".png")

@@ -36,3 +36,5 @@ class tanLine:
     def x(self, y):
         return (y-self.b)/self.m
 
+    def toString(self):
+        return "slope: " + str(self.m) + " intercept: " + str(self.b)
