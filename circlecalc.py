@@ -1,6 +1,7 @@
 # A file to hold functions relating to calculations on the circles
-from holder import *
 from numpy import sqrt
+
+from holder import *
 
 
 # utilizes primordial black magic from 2016 to solve for the 4 possible tangent lines, given two tubehit objects
@@ -12,9 +13,19 @@ def possibleTan(tubehit1, tubehit2):
     x = [tubehit1.x, tubehit2.x]
     y = [tubehit1.y, tubehit2.y]
     r = [tubehit1.r, tubehit2.r]
+    if r[1] * x[0] == r[0] * x[1]:
+        print("x:" + str(x))
+        print("y:" + str(y))
+        print("r:" + str(r))
+        print(tubehit1.tube)
+        print(tubehit2.tube)
+
     # i,j both can be +1 or -1, so are effectively +-s.  Makes sense - 4 combos for 4 possible tan lines
     for i in range(-1, 2, 2):
         for j in range(-1, 2, 2):
+            if (r[1] * x[0] == r[0] * x[1]) and i == -1:
+                print("ignoring vertical tan line on " + tubehit1.tube + " and " + tubehit2.tube)
+                break
             # shared coefs for the quadratic
             Q = (r[1] * y[0] + i * r[0] * y[1]) / (r[1] * x[0] + i * r[0] * x[1])
             P = (r[1] + i * r[0]) / (r[1] * x[0] + i * r[0] * x[1])
@@ -38,7 +49,8 @@ def possibleTan(tubehit1, tubehit2):
 def removeSideTanLines(tanList):
     newList = []
     for line in tanList:
-        if not (line.x(PADDLE_MAX_Y) > PADDLE_MAX_X or line.x(PADDLE_MAX_Y) < PADDLE_MIN_X or
-                line.x(PADDLE_MIN_Y) > PADDLE_MAX_X or line.x(PADDLE_MIN_Y) < PADDLE_MIN_X):
-            newList.append(line)
+        if line.m != 0:
+            if not (line.x(PADDLE_MAX_Y) > PADDLE_MAX_X or line.x(PADDLE_MAX_Y) < PADDLE_MIN_X or
+                            line.x(PADDLE_MIN_Y) > PADDLE_MAX_X or line.x(PADDLE_MIN_Y) < PADDLE_MIN_X):
+                newList.append(line)
     return newList

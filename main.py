@@ -1,6 +1,7 @@
 # The main script.  Run this script to analyze a folder of .gon event files
 import os
 from glob import glob
+from shutil import rmtree
 
 import matplotlib.pyplot as plt
 from numpy import loadtxt
@@ -10,7 +11,7 @@ import tanlineoptimizer as tlo
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
-dataDir = "sampledata/"
+dataDir = "realdata/"
 # subfolder name in which to put the images (will be generated as a subfolder of dataDir.  If it already exists
 # in dataDir, it will be OVERWRITTEN
 imgDir = "images"
@@ -29,6 +30,8 @@ plotConfig = {"showTubes": True,
 scanParams = {"m": scanParam(0.2, 10, True),
               "x": scanParam(0.01, 10, True),
               "y": scanParam(0.005, 10, True)}
+# ignore these tubes, pretend they never fire
+tubeBlacklist = ["3B3"]
 
 # ******************Load tube position data***************** #
 # using numpy, get the x,y positions of each tube in m.  load them into a dict using names as keys
@@ -39,8 +42,30 @@ for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
 
 # Move to the directory in which the data files are
 os.chdir(dataDir)
-# Make a directory to fill with the produced images.  if it already exists, overwrite!
-os.makedirs(imgDir, exist_ok=True)
+
+
+# We're gonna make an img directory if it's the last thing we do
+def makeImgDir(dir):
+    # make sure the input is what we think it should be
+    dir = str(dir)
+    # if the directory exists, then we have to decide what to do.  if it doesn't, make the directory
+    if os.path.isdir(dir):
+        # ask the user whether or not they want to overwrite the current directory.  if they want to, then kill
+        # and remake the directory.  otherwise, procedurally generate a new image directory name, and try that
+        if str(input(
+                                "Existing image directory \"" + dir + "\" found.  Burn it with fire and bury the body? (y/n): ")) == "y":
+            rmtree(dir)
+            os.makedirs(dir)
+            return dir
+        else:
+            return makeImgDir("new" + dir)
+    else:
+        os.makedirs(dir)
+        return dir
+
+
+imgDir = makeImgDir(imgDir)
+
 # Iterate through every data file in the directory, generating an output image for them
 for gon in glob("*.gon"):
     # **********************Load event data********************** #
@@ -52,11 +77,21 @@ for gon in glob("*.gon"):
             # takes line, removes the trailing \n, then creates a two element list split at the ;
             data = line[0:-1].split(";")
 
-            # if it's code 256, meaning the tube didn't fire, ignore it, we don't care
-            # otherwise convert # of clock pulses into radius (m) and xref with the tube x,y pos to make a tubehit event
-            if data[1] != "256":
+            # if it's code 255, meaning the tube didn't fire, ignore it
+            # if the radius is larger than the tube, ignore it
+            # if the tube is blacklisted, ignore it
+            if not (data[1] == "255" or int(data[1]) > 23 or data[0] in tubeBlacklist):
+                # get the xy pos of the specified tube
                 xy = tubepos[data[0]]
-                tubeHitArray.append(tubehit(xy[0], xy[1], float(data[1]) * 1e-8 * DRIFT_VELOCITY, data[0]))
+                # the radius being 0 causes errors, so don't let it be 0
+                if data[1] == "0":
+                    radius = WIRE_RADIUS
+                else:
+                    radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
+                tubeHitArray.append(tubehit(xy[0], xy[1], radius, data[0]))
+    if len(tubeHitArray) <= 1:
+        print(gon[:-4] + " has no real tubehits, skipping")
+        continue
 
     # ******************Find possible tan lines******************* #
     # list to be filled with tanLine objects representing every possible tan line for every pair of tubehits
@@ -67,6 +102,10 @@ for gon in glob("*.gon"):
             rawTanList = rawTanList + cc.possibleTan(tubeHitArray[i], tubeHitArray[j])
     # list filled with tanLine objects representing only lines that pass through both paddles
     paddleTanList = cc.removeSideTanLines(rawTanList)
+
+    if len(paddleTanList) <= 0:
+        print(gon[:-4] + " has no valid tanlines, skipping")
+        continue
 
     # *********************Find best tan line********************** #
     # calculate which tanline has the lowest cost
@@ -100,11 +139,14 @@ for gon in glob("*.gon"):
         for name, pos in tubepos.items():
             ax.add_artist(plt.Circle(pos, OUTER_RADIUS, fill=False, color='black'))
             if plotConfig["showTubeLabels"]:
-                ax.text(pos[0], pos[1], name, size=8, ha="center", va="center")
+                ax.text(pos[0], pos[1], name, size=8, ha="center", va="center", alpha=0.5)
     # draw all hit circles if requested
     if plotConfig["showHitCircles"]:
         for hit in tubeHitArray:
-            ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='green', lw=1.5))
+            if hit.r <= 1 * 1e-8 * DRIFT_VELOCITY:
+                ax.scatter(hit.x, hit.y, color='green', s=15)
+            else:
+                ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='green', lw=1.5))
     # draw both paddles if requested
     if plotConfig["showPaddles"]:
         ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MIN_Y, PADDLE_MIN_Y], color='black', lw=10,
@@ -144,4 +186,5 @@ for gon in glob("*.gon"):
     ax.set_xlim((0.0, 0.5))
     ax.set_ylim((0.0, 0.5))
     fig.savefig(imgDir + "/" + gon[:-4] + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
-    print("Saved " + imgDir + "/" + gon[:-4] + ".png")
+    plt.close(fig)
+    print("Saved " + imgDir + "/" + gon[:-4] + ".png\n\r")

@@ -41,6 +41,9 @@ class tanLine:
 
     # return the value of the x coord for a given y coord
     def x(self, y):
+        if (self.m == 0):
+            print("Warning: Attempted to find x value for a given y value of horizontal line.  Returning 0")
+            return 0
         return (y - self.b) / self.m
 
     def toString(self):
