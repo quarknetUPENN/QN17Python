@@ -13,16 +13,11 @@ def possibleTan(tubehit1, tubehit2):
     x = [tubehit1.x, tubehit2.x]
     y = [tubehit1.y, tubehit2.y]
     r = [tubehit1.r, tubehit2.r]
-    if r[1] * x[0] == r[0] * x[1]:
-        print("x:" + str(x))
-        print("y:" + str(y))
-        print("r:" + str(r))
-        print(tubehit1.tube)
-        print(tubehit2.tube)
 
     # i,j both can be +1 or -1, so are effectively +-s.  Makes sense - 4 combos for 4 possible tan lines
     for i in range(-1, 2, 2):
         for j in range(-1, 2, 2):
+            # this will cause a divide by zero error otherwise.  it implies a vertical tangent line
             if (r[1] * x[0] == r[0] * x[1]) and i == -1:
                 print("ignoring vertical tan line on " + tubehit1.tube + " and " + tubehit2.tube)
                 break
