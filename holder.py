@@ -1,4 +1,7 @@
 # A file to share constants and object frames
+import os
+from shutil import rmtree
+
 from numpy import linspace
 
 # Constant parameters - standard SI base units (meters, seconds, etc.).
@@ -70,3 +73,23 @@ class scanParam:
             return linspace(param - self.width, param + self.width, num=self.n)
         else:
             return [param]
+
+
+# Make a directory for images, at all costs, recursively
+def makeImgDir(dir):
+    # make sure the input is what we think it should be
+    dir = str(dir)
+    # if the directory exists, then we have to decide what to do.  if it doesn't, make the directory
+    if os.path.isdir(dir):
+        # ask the user whether or not they want to overwrite the current directory.  if they want to, then kill
+        # and remake the directory.  otherwise, procedurally generate a new image directory name, and try that
+        if str(input("Existing image directory \"" + dir + "\" found.  " +
+                             "Burn it with fire and bury the body? (y/n): ")) == "y":
+            rmtree(dir)
+            os.makedirs(dir)
+            return dir
+        else:
+            return makeImgDir("new" + dir)
+    else:
+        os.makedirs(dir)
+        return dir

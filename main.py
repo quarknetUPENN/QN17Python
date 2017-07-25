@@ -1,7 +1,5 @@
 # The main script.  Run this script to analyze a folder of .gon event files
-import os
 from glob import glob
-from shutil import rmtree
 
 import matplotlib.pyplot as plt
 from numpy import loadtxt
@@ -12,8 +10,8 @@ from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
 dataDir = "realdata/"
-# subfolder name in which to put the images (will be generated as a subfolder of dataDir.  If it already exists
-# in dataDir, it will be OVERWRITTEN
+# subfolder name in which to put the images (will be generated as a subfolder of dataDir).  If it already exists,
+# we'll try to make a different one
 imgDir = "images"
 # define what to plot
 plotConfig = {"showTubes": True,
@@ -22,8 +20,6 @@ plotConfig = {"showTubes": True,
               "showHitCircles": True,
               "showAllPossibleTanLines": False,
               "showPaddleTanLines": False,
-              "showBestTanLine": False,
-              "showBestTanLineMidpoint": False,
               "showSearchedLines": False,
               "showBestLine": True}
 # define what spread and how many points to iterate around the best tanline for various attributes
@@ -42,28 +38,7 @@ for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
 
 # Move to the directory in which the data files are
 os.chdir(dataDir)
-
-
-# We're gonna make an img directory if it's the last thing we do
-def makeImgDir(dir):
-    # make sure the input is what we think it should be
-    dir = str(dir)
-    # if the directory exists, then we have to decide what to do.  if it doesn't, make the directory
-    if os.path.isdir(dir):
-        # ask the user whether or not they want to overwrite the current directory.  if they want to, then kill
-        # and remake the directory.  otherwise, procedurally generate a new image directory name, and try that
-        if str(input(
-                                "Existing image directory \"" + dir + "\" found.  Burn it with fire and bury the body? (y/n): ")) == "y":
-            rmtree(dir)
-            os.makedirs(dir)
-            return dir
-        else:
-            return makeImgDir("new" + dir)
-    else:
-        os.makedirs(dir)
-        return dir
-
-
+# Make the image directory, even if it's not exactly the specified one
 imgDir = makeImgDir(imgDir)
 
 # Iterate through every data file in the directory, generating an output image for them
@@ -80,7 +55,7 @@ for gon in glob("*.gon"):
             # if it's code 255, meaning the tube didn't fire, ignore it
             # if the radius is larger than the tube, ignore it
             # if the tube is blacklisted, ignore it
-            if not (data[1] == "255" or int(data[1]) > 23 or data[0] in tubeBlacklist):
+            if not (data[1] == "255" or int(data[1]) > 22 or data[0] in tubeBlacklist):
                 # get the xy pos of the specified tube
                 xy = tubepos[data[0]]
                 # the radius being 0 causes errors, so don't let it be 0
@@ -143,10 +118,10 @@ for gon in glob("*.gon"):
     # draw all hit circles if requested
     if plotConfig["showHitCircles"]:
         for hit in tubeHitArray:
-            if hit.r <= 1 * 1e-8 * DRIFT_VELOCITY:
-                ax.scatter(hit.x, hit.y, color='green', s=15)
+            if hit.r <= 3 * 1e-8 * DRIFT_VELOCITY:
+                ax.add_artist(plt.Circle((hit.x, hit.y), 3 * 1e-8 * DRIFT_VELOCITY, fill=True, color='red', lw=1.5))
             else:
-                ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='green', lw=1.5))
+                ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='red', lw=1.5))
     # draw both paddles if requested
     if plotConfig["showPaddles"]:
         ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MIN_Y, PADDLE_MIN_Y], color='black', lw=10,
@@ -162,21 +137,14 @@ for gon in glob("*.gon"):
         for line in paddleTanList:
             lab, = ax.plot([0, 1], [line.y(0), line.y(1)], color="green", ls="-", lw=1)
         lab.set_label("Paddle Tangent Lines")
-    # draw the best tan line if requested
-    if plotConfig["showBestTanLine"]:
-        lab, = ax.plot([0, 1], [bestTanLine.y(0), bestTanLine.y(1)], color="b", lw=1)
-        lab.set_label("Best Tangent Line")
-    # draw the midpoint of the best tan line if requested
-    if plotConfig["showBestTanLineMidpoint"]:
-        ax.scatter([midpoint[0]], [midpoint[1]], label="Best Tangent Line Midpoint")
     # draw all the lines that were searched around the tan line
     if plotConfig["showSearchedLines"]:
         for line in cost.values():
-            lab, = ax.plot([0, 1], [line.y(0), line.y(1)], color="b", lw=0.01)
+            lab, = ax.plot([0, 1], [line.y(0), line.y(1)], color="yellow", lw=0.01)
         lab.set_label("Searched Lines")
     # draw the best guess at the particle's track if requested
     if plotConfig["showBestLine"]:
-        lab, = ax.plot([0, 1], [bestLine.y(0), bestLine.y(1)], color="r", lw=2)
+        lab, = ax.plot([0, 1], [bestLine.y(0), bestLine.y(1)], color="blue", lw=2)
         lab.set_label("Best Line")
 
     # draw legend to right of graph
