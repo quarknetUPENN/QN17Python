@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from numpy import loadtxt
 
 import circlecalc as cc
-import tanlineoptimizer as tlo
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
@@ -87,7 +86,7 @@ for gon in glob("*.gon"):
     # make a dictionary in which the keys are costs and the values are the tanlines that produced those costs
     cost = {}
     for line in paddleTanList:
-        cost[tlo.tanlineCostCalculator(line, tubeHitArray)] = line
+        cost[cc.tanlineCostCalculator(line, tubeHitArray)] = line
     # then find the minimum cost and figure out which tanline it was
     bestTanLine = cost[min(cost.keys())]
 
@@ -95,13 +94,13 @@ for gon in glob("*.gon"):
     # brute force down lists of lines around the best tanline to find the one with lowest cost
     # x,y is the x,y deviation from the midpoint, calculated relative to the scintillator paddles
     # m is the deviation from the slope of the best tanline
-    cost = {tlo.tanlineCostCalculator(bestTanLine, tubeHitArray): bestTanLine}
+    cost = {cc.tanlineCostCalculator(bestTanLine, tubeHitArray): bestTanLine}
     midpoint = [(bestTanLine.x((PADDLE_MIN_Y + PADDLE_MAX_Y) / 2)), (PADDLE_MIN_Y + PADDLE_MAX_Y) / 2]
     for m2 in scanParams["m"].range(bestTanLine.m):
         for x2 in scanParams["x"].range(midpoint[0]):
             for y2 in scanParams["y"].range(midpoint[1]):
                 line = tanLine(m2, y2 - (m2 * x2))
-                cost[tlo.tanlineCostCalculator(line, tubeHitArray)] = line
+                cost[cc.tanlineCostCalculator(line, tubeHitArray)] = line
 
     # Our best guess at the particle's track!
     bestLine = cost[min(cost.keys())]
@@ -151,8 +150,8 @@ for gon in glob("*.gon"):
     lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     # size the drawing and save it into the imgDir
-    ax.set_xlim((0.0, 0.5))
-    ax.set_ylim((0.0, 0.5))
+    ax.set_xlim((0.0, 0.7))
+    ax.set_ylim((0.0, 0.7))
     fig.savefig(imgDir + "/" + gon[:-4] + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
     plt.close(fig)
     print("Saved " + imgDir + "/" + gon[:-4] + ".png\n\r")
