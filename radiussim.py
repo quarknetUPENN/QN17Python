@@ -9,7 +9,7 @@ import circlecalc
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
-dataDir = "runs/data_2017-07-28_1719/"
+dataDir = "data_2017-07-28_1719/"
 # subfolder name in which to put the images (will be generated as a subfolder of dataDir).  If it already exists,
 # we'll try to make a different one
 imgDir = "images"
@@ -96,8 +96,8 @@ for gon in glob("*.gon"):
     print("Saved " + imgDir + "/" + gon[:-4] + ".png\n\r")
 
 print(minxdists)
-plt.hist(minxdists, bins=100)
-plt.hist([tubehit.r for tubehit in allTubeHits], bins=100, alpha=0.5, color='red')
+(n, bins, patches) = plt.hist(minxdists, bins=100)
+plt.hist([tubehit.r for tubehit in allTubeHits], bins=bins, alpha=0.5, color='red')
 plt.show()
 
 

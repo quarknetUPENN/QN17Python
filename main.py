@@ -9,7 +9,7 @@ import circlecalc
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
-dataDir = "runs/data_2017-07-28_1719/"
+dataDir = "data_2017-07-28_1719/"
 # subfolder name in which to put the images (will be generated as a subfolder of dataDir).  If it already exists,
 # we'll try to make a different one
 imgDir = "images"
