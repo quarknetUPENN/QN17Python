@@ -1,5 +1,6 @@
 # A script to analyze all data files and produce two graphs of overall system performance
 from glob import glob
+from scipy.special import factorial
 
 import numpy as np
 
@@ -21,7 +22,7 @@ for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
     tubeHitCounts[tube[0].decode("utf-8")] = 0
 
-
+os.chdir("runs")
 for dataDir in glob("data_2017*"):
     # Move to the directory in which the data files are
     os.chdir(dataDir)
@@ -61,7 +62,7 @@ triggerList = []
 for key in sorted(tubeHitCounts.keys()):
     tubeList.append(key)
     triggerList.append(tubeHitCounts[key])
-plt.barh(np.arange(len(tubeHitCounts)),triggerList,tick_label=tubeList)
+plt.barh(np.arange(len(tubeHitCounts)), triggerList, tick_label=tubeList)
 plt.xlabel("Number of Triggers Recorded")
 plt.ylabel("Tube Code")
 plt.savefig("TubeHitFrequency.png")
@@ -69,7 +70,23 @@ plt.cla()
 
 while hit_count_dist[-1] == 0:
     hit_count_dist.pop()
+
+expected_hit_count_dist = []
+p = 0.2
+pnoise = 0.5
+for i in range(5):
+    expected_hit_count_dist.append(sum(hit_count_dist) * p ** i * (1 - p) ** (4 - i) * factorial(4)/(factorial(i)*factorial(4-i)))
+
+
+anotherList = list(np.zeros(len(hit_count_dist)+1))
+for i in range(len(expected_hit_count_dist)):
+    anotherList[i] += (1-pnoise)*expected_hit_count_dist[i]
+    anotherList[i+1] += pnoise*expected_hit_count_dist[i]
+print(sum(expected_hit_count_dist))
+print(sum(hit_count_dist))
+
 plt.bar(range(len(hit_count_dist)), hit_count_dist)
+plt.bar(range(len(anotherList)), anotherList, color='r', alpha=0.5)
 plt.xlabel("Number of Tube Hits per Event")
 plt.ylabel("Number of Events")
 plt.savefig("OverallHitCountDistribution.png")
