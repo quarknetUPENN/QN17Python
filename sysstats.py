@@ -1,0 +1,71 @@
+# The main script.  Run this script to analyze a folder of .gon event files
+from glob import glob
+
+import numpy as np
+
+import matplotlib.pyplot as plt
+from holder import *
+
+# ignore these tubes, pretend they never fire
+tubeBlacklist = ["3B3"]
+
+tubeHitCounts = {}
+tubepos = {}
+for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
+    tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
+    tubeHitCounts[tube[0].decode("utf-8")] = 0
+
+hit_count_dist = list(np.zeros(32))
+
+for dataDir in glob("data_2017*"):
+    # Move to the directory in which the data files are
+    os.chdir(dataDir)
+
+    # Iterate through every data file in the directory, generating an output image for them
+    for gon in glob("*.gon"):
+        with open(gon, "r") as file:
+            # list to be filled with tubehit events
+            tubeHitArray = []
+            # Iterate through every line in the file
+            for line in file:
+                # takes line, removes the trailing \n, then creates a two element list split at the ;
+                data = line[0:-1].split(";")
+
+                # if it's code 255, meaning the tube didn't fire, ignore it
+                # if the radius is larger than the tube, ignore it
+                # if the tube is blacklisted, ignore it
+                if not (data[1] == "255" or int(data[1]) > 22 or data[0] in tubeBlacklist):
+                    # get the xy pos of the specified tube
+                    xy = tubepos[data[0]]
+                    # the radius being 0 causes errors, so don't let it be 0
+                    if data[1] == "0":
+                        radius = WIRE_RADIUS
+                    else:
+                        radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
+                    tubeHitArray.append(tubehit(xy[0], xy[1], radius, data[0]))
+                    tubeHitCounts[data[0]] += 1
+        hit_count_dist[len(tubeHitArray)] += 1
+
+        if len(tubeHitArray) <= 1:
+            print(dataDir[16:] + "," + gon[:-4] + " has no real tubehits")
+            continue
+    os.chdir("..")
+
+tubeList = []
+triggerList = []
+for key in sorted(tubeHitCounts.keys()):
+    tubeList.append(key)
+    triggerList.append(tubeHitCounts[key])
+
+plt.barh(np.arange(len(tubeHitCounts)),triggerList,tick_label=tubeList)
+plt.xlabel("Number of Triggers Recorded")
+plt.ylabel("Tube Code")
+plt.savefig("TubeHitFrequency.png")
+plt.cla()
+
+while hit_count_dist[-1] == 0:
+    hit_count_dist.pop()
+plt.bar(range(len(hit_count_dist)), hit_count_dist)
+plt.xlabel("Number of Tube Hits per Event")
+plt.ylabel("Number of Events")
+plt.savefig("OverallHitCountDistribution.png")
