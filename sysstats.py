@@ -1,4 +1,4 @@
-# The main script.  Run this script to analyze a folder of .gon event files
+# A script to analyze all data files and produce two graphs of overall system performance
 from glob import glob
 
 import numpy as np
@@ -9,13 +9,18 @@ from holder import *
 # ignore these tubes, pretend they never fire
 tubeBlacklist = ["3B3"]
 
+# a dictionary to record the number of times any given tube gets hit
 tubeHitCounts = {}
+
+# a list of how many events have a given number of hits
+# the number in the 0th place represents the number of events that had 0 hits, etc
+hit_count_dist = list(np.zeros(32))
+
 tubepos = {}
 for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
     tubeHitCounts[tube[0].decode("utf-8")] = 0
 
-hit_count_dist = list(np.zeros(32))
 
 for dataDir in glob("data_2017*"):
     # Move to the directory in which the data files are
@@ -42,7 +47,7 @@ for dataDir in glob("data_2017*"):
                         radius = WIRE_RADIUS
                     else:
                         radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
-                    tubeHitArray.append(tubehit(xy[0], xy[1], radius, data[0]))
+                    tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
                     tubeHitCounts[data[0]] += 1
         hit_count_dist[len(tubeHitArray)] += 1
 
@@ -56,7 +61,6 @@ triggerList = []
 for key in sorted(tubeHitCounts.keys()):
     tubeList.append(key)
     triggerList.append(tubeHitCounts[key])
-
 plt.barh(np.arange(len(tubeHitCounts)),triggerList,tick_label=tubeList)
 plt.xlabel("Number of Triggers Recorded")
 plt.ylabel("Tube Code")

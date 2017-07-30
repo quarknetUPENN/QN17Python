@@ -76,3 +76,50 @@ def __distanceFromTubehitToTanline(tubehit, tanline):
 def tanlineCostCalculator(tanline, tubehitArray):
     cost = [__distanceFromTubehitToTanline(hits, tanline) for hits in tubehitArray]
     return average(cost)
+
+
+def analyzeHits(tubeHitArray, verbose=False):
+    # ******************Find possible tan lines******************* #
+    # list to be filled with tanLine objects representing every possible tan line for every pair of tubehits
+    rawTanList = []
+    # fill tanList by iterating through every combination of tubehits
+    for i in range(len(tubeHitArray)):
+        for j in range(i + 1, len(tubeHitArray)):
+            rawTanList = rawTanList + possibleTan(tubeHitArray[i], tubeHitArray[j])
+    # list filled with tanLine objects representing only lines that pass through both paddles
+    paddleTanList = removeSideTanLines(rawTanList)
+
+    if len(paddleTanList) <= 0:
+        if verbose:
+            return [rawTanList, paddleTanList, None, None, None]
+        else:
+            return None
+
+    # *********************Find best tan line********************** #
+    # calculate which tanline has the lowest cost
+    # make a dictionary in which the keys are costs and the values are the tanlines that produced those costs
+    cost = {}
+    for line in paddleTanList:
+        cost[tanlineCostCalculator(line, tubeHitArray)] = line
+    # then find the minimum cost and figure out which tanline it was
+    bestTanLine = cost[min(cost.keys())]
+
+    # ***************Search around the best tan line*************** #
+    # brute force down lists of lines around the best tanline to find the one with lowest cost
+    # x,y is the x,y deviation from the midpoint, calculated relative to the scintillator paddles
+    # m is the deviation from the slope of the best tanline
+    cost = {tanlineCostCalculator(bestTanLine, tubeHitArray): bestTanLine}
+    midpoint = [(bestTanLine.x((PADDLE_MIN_Y + PADDLE_MAX_Y) / 2)), (PADDLE_MIN_Y + PADDLE_MAX_Y) / 2]
+    for m2 in scanParams["m"].range(bestTanLine.m):
+        for x2 in scanParams["x"].range(midpoint[0]):
+            for y2 in scanParams["y"].range(midpoint[1]):
+                line = tanLine(m2, y2 - (m2 * x2))
+                cost[tanlineCostCalculator(line, tubeHitArray)] = line
+
+    # Our best guess at the particle's track!
+    bestLine = cost[min(cost.keys())]
+
+    if verbose:
+        return [rawTanList, paddleTanList, bestTanLine, bestLine, cost]
+    else:
+        return bestLine

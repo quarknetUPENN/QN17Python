@@ -4,29 +4,15 @@ from glob import glob
 import matplotlib.pyplot as plt
 from numpy import loadtxt
 
-import circlecalc as cc
+import circlecalc
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
-dataDir = "realdata/"
+dataDir = "oldrealdata/"
 # subfolder name in which to put the images (will be generated as a subfolder of dataDir).  If it already exists,
 # we'll try to make a different one
 imgDir = "images"
-# define what to plot
-plotConfig = {"showTubes": True,
-              "showTubeLabels": True,
-              "showPaddles": True,
-              "showHitCircles": True,
-              "showAllPossibleTanLines": False,
-              "showPaddleTanLines": False,
-              "showSearchedLines": False,
-              "showBestLine": True}
-# define what spread and how many points to iterate around the best tanline for various attributes
-scanParams = {"m": scanParam(0.2, 10, True),
-              "x": scanParam(0.01, 10, True),
-              "y": scanParam(0.005, 10, True)}
-# ignore these tubes, pretend they never fire
-tubeBlacklist = ["3B3"]
+
 
 # ******************Load tube position data***************** #
 # using numpy, get the x,y positions of each tube in m.  load them into a dict using names as keys
@@ -62,48 +48,19 @@ for gon in glob("*.gon"):
                     radius = WIRE_RADIUS
                 else:
                     radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
-                tubeHitArray.append(tubehit(xy[0], xy[1], radius, data[0]))
+                tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
     if len(tubeHitArray) <= 1:
         print(gon[:-4] + " has no real tubehits, skipping")
         continue
 
-    # ******************Find possible tan lines******************* #
-    # list to be filled with tanLine objects representing every possible tan line for every pair of tubehits
-    rawTanList = []
-    # fill tanList by iterating through every combination of tubehits
-    for i in range(len(tubeHitArray)):
-        for j in range(i + 1, len(tubeHitArray)):
-            rawTanList = rawTanList + cc.possibleTan(tubeHitArray[i], tubeHitArray[j])
-    # list filled with tanLine objects representing only lines that pass through both paddles
-    paddleTanList = cc.removeSideTanLines(rawTanList)
-
-    if len(paddleTanList) <= 0:
+    # **********************Analyze event data********************** #
+    results = circlecalc.analyzeHits(tubeHitArray, verbose=True)
+    if results[-1] is None:
         print(gon[:-4] + " has no valid tanlines, skipping")
         continue
+    else:
+        rawTanList, paddleTanList, bestTanLine, bestLine, cost = results
 
-    # *********************Find best tan line********************** #
-    # calculate which tanline has the lowest cost
-    # make a dictionary in which the keys are costs and the values are the tanlines that produced those costs
-    cost = {}
-    for line in paddleTanList:
-        cost[cc.tanlineCostCalculator(line, tubeHitArray)] = line
-    # then find the minimum cost and figure out which tanline it was
-    bestTanLine = cost[min(cost.keys())]
-
-    # ***************Search around the best tan line*************** #
-    # brute force down lists of lines around the best tanline to find the one with lowest cost
-    # x,y is the x,y deviation from the midpoint, calculated relative to the scintillator paddles
-    # m is the deviation from the slope of the best tanline
-    cost = {cc.tanlineCostCalculator(bestTanLine, tubeHitArray): bestTanLine}
-    midpoint = [(bestTanLine.x((PADDLE_MIN_Y + PADDLE_MAX_Y) / 2)), (PADDLE_MIN_Y + PADDLE_MAX_Y) / 2]
-    for m2 in scanParams["m"].range(bestTanLine.m):
-        for x2 in scanParams["x"].range(midpoint[0]):
-            for y2 in scanParams["y"].range(midpoint[1]):
-                line = tanLine(m2, y2 - (m2 * x2))
-                cost[cc.tanlineCostCalculator(line, tubeHitArray)] = line
-
-    # Our best guess at the particle's track!
-    bestLine = cost[min(cost.keys())]
 
     # ***********************Draw everything********************** #
     # create the drawing

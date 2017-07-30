@@ -14,8 +14,9 @@ PADDLE_MIN_Y = 0.075
 PADDLE_MAX_Y = 0.652
 
 
+
 # Holder class for an event that triggers a tube
-class tubehit:
+class tubeHit:
     def __init__(self, x, y, r, tube):
         # physical x coord of the tube, in m
         self.x = x
@@ -74,6 +75,21 @@ class scanParam:
         else:
             return [param]
 
+# define what to plot
+plotConfig = {"showTubes": True,
+              "showTubeLabels": True,
+              "showPaddles": True,
+              "showHitCircles": True,
+              "showAllPossibleTanLines": False,
+              "showPaddleTanLines": False,
+              "showSearchedLines": False,
+              "showBestLine": True}
+# define what spread and how many points to iterate around the best tanline for various attributes
+scanParams = {"m": scanParam(0.2, 10, True),
+              "x": scanParam(0.01, 10, True),
+              "y": scanParam(0.005, 10, True)}
+# ignore these tubes, pretend they never fire
+tubeBlacklist = ["3B3"]
 
 # Make a directory for images, at all costs, recursively
 def makeImgDir(dir):
