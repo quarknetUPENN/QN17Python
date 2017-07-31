@@ -9,12 +9,12 @@ import circlecalc
 from holder import *
 
 # folder in which to find the data.  this can be relative or absolute path
-dataDir = "data_2017-07-28_1719/"
+dataDir = "runs/data_2017-07-30_1741/"
 # subfolder name in which to put the images (will be generated as a subfolder of dataDir).  If it already exists,
 # we'll try to make a different one
 imgDir = "images"
 
-analyzedFiles = ['{']
+analyzedFiles = []
 def formatTanlineList(tanlineList):
     output = "["
     for line in tanlineList:
@@ -61,7 +61,7 @@ for gon in glob("*.gon"):
                 else:
                     radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
                 tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
-    if len(tubeHitArray) <= 1:
+    if not len(tubeHitArray) <= 1:
         print(gon[:-4] + " has no real tubehits, skipping")
         continue
 
@@ -73,10 +73,9 @@ for gon in glob("*.gon"):
     else:
         rawTanList, paddleTanList, bestTanLine, bestLine, cost = results
 
-    analyzedFiles.append(gon + ": [" + formatTanlineList(rawTanList) + "," + formatTanlineList(paddleTanList) + "," +
+    analyzedFiles.append("\""+gon+"\"" + ": [" + formatTanlineList(rawTanList) + "," + formatTanlineList(paddleTanList) + "," +
         formatTanline(bestTanLine) + "," + formatTanline(bestLine) + "," +
-        str(min(cost.keys())) + "], ")
-
+        str(min(cost.keys())) + "]")
 
     # ***********************Draw everything********************** #
     # create the drawing
@@ -128,9 +127,15 @@ for gon in glob("*.gon"):
     fig.savefig(imgDir + "/" + gon[:-4] + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
     plt.close(fig)
     print("Saved " + imgDir + "/" + gon[:-4] + ".png\n\r")
+os.chdir("../..")
 
-analyzedFiles.append('}')
 with open('thing.dum', 'w') as f:
+    f.write("{")
+    writeString = []
     for string in analyzedFiles:
+        writeString.append(string)
+        writeString.append(", ")
+    for string in writeString[:-1]:
         f.write(string)
+    f.write("}")
 
