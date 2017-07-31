@@ -1,7 +1,7 @@
 # A script to analyze all data files and produce two graphs of overall system performance
 from glob import glob
 from scipy.special import factorial
-
+from analysis import outputFolder
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -59,6 +59,7 @@ for dataDir in glob("data_2017*"):
 os.chdir("..")
 
 
+# draw the number of triggers recorded for every tube
 tubeList = []
 triggerList = []
 for key in sorted(tubeHitCounts.keys()):
@@ -67,7 +68,7 @@ for key in sorted(tubeHitCounts.keys()):
 plt.barh(np.arange(len(tubeHitCounts)), triggerList, tick_label=tubeList)
 plt.xlabel("Number of Triggers Recorded")
 plt.ylabel("Tube Code")
-plt.savefig("TubeHitFrequency.png")
+plt.savefig(outputFolder+"TubeHitFrequency.png")
 plt.cla()
 
 while hit_count_dist[-1] == 0:
@@ -91,4 +92,4 @@ plt.bar(range(len(hit_count_dist)), hit_count_dist)
 plt.bar(range(len(anotherList)), anotherList, color='r', alpha=0.5)
 plt.xlabel("Number of Tube Hits per Event")
 plt.ylabel("Number of Events")
-plt.savefig("OverallHitCountDistribution.png")
+plt.savefig(outputFolder+"OverallHitCountDistribution.png")

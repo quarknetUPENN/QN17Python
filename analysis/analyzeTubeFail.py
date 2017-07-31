@@ -3,6 +3,7 @@ from glob import glob
 import matplotlib.pyplot as plt
 from numpy import loadtxt
 import numpy as np
+from analysis import outputFolder
 
 import circlecalc
 from holder import *
@@ -122,18 +123,23 @@ for dir in glob("data_*"):
     os.chdir("..")
 os.chdir("..")
 
-
+# draw the number of recorded tube hits and the number of missed tube hits vs radius of the hit
+# this looks across all tubes and looks at the sensitivity of the tube close in and far out
+# ideally, the missed tube hits would all be 0
 (n, bins, patches) = plt.hist([round(x / (DRIFT_VELOCITY * 10 ** (-8))) for x in minxdists],
                               bins=round(max(minxdists) / (DRIFT_VELOCITY * 10 ** (-8))), label="Missed Tube Hits")
 plt.hist([round(tubehit.r / (DRIFT_VELOCITY * 10 ** (-8))) for tubehit in allTubeHits], bins=bins, alpha=0.5,
          color='red', label="Recorded Tube Hits")
 plt.xlabel("Radius in Clock Cycles")
 plt.ylabel("Number of Events Recorded")
-plt.title("Tube Miss Rate vs Hit Radius")
-plt.savefig("TubeMissRateRadius.png")
+plt.title("Tube Fail Rate vs Hit Radius")
+plt.xlim((0,25))
+plt.legend()
+plt.savefig(outputFolder + "TubeFailRateRadius.png")
 plt.cla()
 
-
+# draw the fraction of hits missed for each tube
+# ideally, everything is 0.  this tells you how a given tube is performing
 tubeList = []
 triggerList = []
 for key in sorted(tubeFailFreq.keys()):
@@ -142,5 +148,5 @@ for key in sorted(tubeFailFreq.keys()):
 plt.barh(np.arange(len(tubeFailFreq)), triggerList, tick_label=tubeList)
 plt.xlabel("Fraction of Missed Events")
 plt.ylabel("Tube Code")
-plt.title("Tube Miss Rate vs Tube Code")
-plt.savefig("TubeMissRateCode.png")
+plt.title("Tube Fail Rate vs Tube Code")
+plt.savefig(outputFolder + "TubeFailRateCode.png")
