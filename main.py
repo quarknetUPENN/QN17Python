@@ -14,6 +14,17 @@ dataDir = "data_2017-07-28_1719/"
 # we'll try to make a different one
 imgDir = "images"
 
+analyzedFiles = ['{']
+def formatTanlineList(tanlineList):
+    output = "["
+    for line in tanlineList:
+        output += formatTanline(line) + ","
+    return output[:-1] + "]"
+
+
+def formatTanline(tanline):
+    return "tanLine(" + str(tanline.m) + "," + str(tanline.b) + ")"
+
 
 # ******************Load tube position data***************** #
 # using numpy, get the x,y positions of each tube in m.  load them into a dict using names as keys
@@ -61,6 +72,10 @@ for gon in glob("*.gon"):
         continue
     else:
         rawTanList, paddleTanList, bestTanLine, bestLine, cost = results
+
+    analyzedFiles.append(gon + ": [" + formatTanlineList(rawTanList) + "," + formatTanlineList(paddleTanList) + "," +
+        formatTanline(bestTanLine) + "," + formatTanline(bestLine) + "," +
+        str(min(cost.keys())) + "], ")
 
 
     # ***********************Draw everything********************** #
@@ -113,3 +128,9 @@ for gon in glob("*.gon"):
     fig.savefig(imgDir + "/" + gon[:-4] + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
     plt.close(fig)
     print("Saved " + imgDir + "/" + gon[:-4] + ".png\n\r")
+
+analyzedFiles.append('}')
+with open('thing.dum', 'w') as f:
+    for string in analyzedFiles:
+        f.write(string)
+
