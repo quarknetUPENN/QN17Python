@@ -41,17 +41,18 @@ for code in tubeCodes:
     hits = []
     for voltage in sorted(tubeData.keys()):
         voltages.append(voltage)
-        hits.append(tubeData[voltage][code])
+        hits.append(tubeData[voltage][code]*255*10**(-8))
 
     print(code + str([str(x) for x in zip(voltages, hits)]))
 
-    plt.scatter(voltages, hits)
+    plt.plot(voltages, hits, "-o")
 
     plt.title("Tube " + code + "'s Noise vs Voltage")
     plt.xlabel("Tube Voltage")
-    plt.ylabel("Noise Counts per Second")
+    plt.ylabel("Average Noise Counts per Event")
     plt.xlim((min(tubeData.keys()), max(tubeData.keys())))
-    plt.ylim((0, 100000))
+    plt.axhline(0.01)
+    plt.ylim((0, 0.1))
 
     plt.savefig(code + ".png")
     plt.cla()

@@ -85,8 +85,6 @@ anotherList = list(np.zeros(len(hit_count_dist)+1))
 for i in range(len(expected_hit_count_dist)):
     anotherList[i] += (1-pnoise)*expected_hit_count_dist[i]
     anotherList[i+1] += pnoise*expected_hit_count_dist[i]
-print(sum(expected_hit_count_dist))
-print(sum(hit_count_dist))
 
 plt.bar(range(len(hit_count_dist)), hit_count_dist)
 plt.bar(range(len(anotherList)), anotherList, color='r', alpha=0.5)

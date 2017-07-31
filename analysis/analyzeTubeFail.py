@@ -114,6 +114,8 @@ for dir in glob("data_*"):
                 m = bestLine.m
                 b = bestLine.b
                 xdists[(np.abs(b + m * x - y) / np.sqrt(1 + m ** 2))] = x
+            if min(xdists.keys()) > OUTER_RADIUS:
+                continue
             # record the closest distance found
             minxdists.append(min(xdists.keys()))
 
@@ -122,6 +124,7 @@ for dir in glob("data_*"):
         print("Processed " + gon[:-4])
     os.chdir("..")
 os.chdir("..")
+
 
 # draw the number of recorded tube hits and the number of missed tube hits vs radius of the hit
 # this looks across all tubes and looks at the sensitivity of the tube close in and far out
