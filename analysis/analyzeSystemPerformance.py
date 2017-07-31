@@ -56,6 +56,8 @@ for dataDir in glob("data_2017*"):
             print(dataDir[16:] + "," + gon[:-4] + " has no real tubehits")
             continue
     os.chdir("..")
+os.chdir("..")
+
 
 tubeList = []
 triggerList = []
