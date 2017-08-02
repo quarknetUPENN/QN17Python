@@ -2,7 +2,7 @@
 import os
 from shutil import rmtree
 
-from numpy import linspace
+from numpy import linspace, loadtxt
 
 # Constant parameters - standard SI base units (meters, seconds, etc.).
 OUTER_RADIUS = 0.0127
@@ -90,6 +90,8 @@ scanParams = {"m": scanParam(0.2, 10, True),
               "y": scanParam(0.005, 10, True)}
 # ignore these tubes, pretend they never fire
 tubeBlacklist = ["3B3"]
+# the directory that has the timestamped data folders in it
+rootDataDir = "runs/"
 
 # Make a directory for images, at all costs, recursively
 def makeImgDir(dir):
@@ -99,7 +101,7 @@ def makeImgDir(dir):
     if os.path.isdir(dir):
         # ask the user whether or not they want to overwrite the current directory.  if they want to, then kill
         # and remake the directory.  otherwise, procedurally generate a new image directory name, and try that
-        if str(input("Existing image directory \"" + dir + "\" found.  " +
+        if str(input("Existing image directory \"" + os.getcwd() + "\\"+dir + "\" found.  " +
                              "Burn it with fire and bury the body? (y/n): ")) == "y":
             rmtree(dir)
             os.makedirs(dir)
@@ -109,3 +111,12 @@ def makeImgDir(dir):
     else:
         os.makedirs(dir)
         return dir
+
+# ******************Load tube position data***************** #
+def loadTubePos():
+    # using numpy, get the x,y positions of each tube in m.  load them into a dict using names as keys
+    # requires name to be converted from bytes to strings
+    tubepos = {}
+    for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
+        tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
+    return tubepos

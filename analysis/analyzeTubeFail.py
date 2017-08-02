@@ -5,11 +5,8 @@ from numpy import loadtxt
 import numpy as np
 from analysis import outputFolder
 
-import circlecalc
 from holder import *
 
-# folder in which to find the data.  this can be relative or absolute path
-dataDir = "runs"
 
 # a dictionary mapping the tube name to a tuple (x,y) of its physical location in x and y
 tubepos = {}
@@ -47,10 +44,16 @@ minxdists = []
 allTubeHits = []
 
 # Move to the directory in which the data files are
-os.chdir(dataDir)
+os.chdir(rootDataDir)
 
-for dir in glob("data_*"):
+
+for dir in glob("data_2017-07-28*"):
     os.chdir(dir)
+
+    analyzed = {}
+    with open('analyzed.dum', 'r') as file:
+        exec("analyzed = " + file.readline())
+
     # Iterate through every data file in the directory, processing them
     for gon in glob("*.gon"):
         # **********************Load event data********************** #
@@ -76,16 +79,18 @@ for dir in glob("data_*"):
                     tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
                     allTubeHits.append(tubeHit(xy[0], xy[1], radius, data[0]))
         if len(tubeHitArray) <= 1:
-            print(gon[:-4] + " has no real tubehits, skipping")
+            print(dir+"\\"+gon[:-4] + " has no real tubehits, skipping")
             continue
 
-        # **********************Analyze event data********************** #
-        results = circlecalc.analyzeHits(tubeHitArray, verbose=True)
-        if results[-1] is None:
-            print(gon[:-4] + " has no valid tanlines, skipping")
+        # **********************Get analyzed event data********************** #
+        # this finds the analyzed data from the .dum file and pulls the information
+        # however, if the dum file doesn't have this event, it means that the event had no valid tanlines
+        # and therefore did not make an entry for it
+        try:
+            rawTanList, paddleTanList, bestTanLine, bestLine, cost = analyzed[gon]
+        except KeyError:
+            print(dir+"\\"+gon[:-4] + " has no valid tanlines, skipping")
             continue
-        else:
-            rawTanList, paddleTanList, bestTanLine, bestLine, cost = results
 
         # a counter variable to keep track of whether we are on layer a or b as we go through y
         i = 0
@@ -121,7 +126,7 @@ for dir in glob("data_*"):
 
             # look up the tube, and mark that it failed
             tubeFailFreq[reverseTubePos[(xdists[min(xdists.keys())], y)]] += 1
-        print("Processed " + gon[:-4])
+        print("Processed " + dir+"\\"+gon[:-4])
     os.chdir("..")
 os.chdir("..")
 

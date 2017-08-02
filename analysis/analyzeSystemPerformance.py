@@ -22,10 +22,10 @@ for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
     tubeHitCounts[tube[0].decode("utf-8")] = 0
 
-os.chdir("runs")
-for dataDir in glob("data_2017*"):
+os.chdir(rootDataDir)
+for dir in glob("data_*"):
     # Move to the directory in which the data files are
-    os.chdir(dataDir)
+    os.chdir(dir)
 
     # Iterate through every data file in the directory, generating an output image for them
     for gon in glob("*.gon"):
@@ -53,7 +53,7 @@ for dataDir in glob("data_2017*"):
         hit_count_dist[len(tubeHitArray)] += 1
 
         if len(tubeHitArray) <= 1:
-            print(dataDir[16:] + "," + gon[:-4] + " has no real tubehits")
+            print(dir[16:] + "," + gon[:-4] + " has no real tubehits")
             continue
     os.chdir("..")
 os.chdir("..")
@@ -75,8 +75,8 @@ while hit_count_dist[-1] == 0:
     hit_count_dist.pop()
 
 expected_hit_count_dist = []
-p = 0.2
-pnoise = 0.5
+p = 0.3
+pnoise = 0.03
 for i in range(5):
     expected_hit_count_dist.append(sum(hit_count_dist) * p ** i * (1 - p) ** (4 - i) * factorial(4)/(factorial(i)*factorial(4-i)))
 
@@ -87,7 +87,8 @@ for i in range(len(expected_hit_count_dist)):
     anotherList[i+1] += pnoise*expected_hit_count_dist[i]
 
 plt.bar(range(len(hit_count_dist)), hit_count_dist)
-plt.bar(range(len(anotherList)), anotherList, color='r', alpha=0.5)
+plt.xlim((0,5))
+#plt.bar(range(len(anotherList)), anotherList, color='r', alpha=0.5)
 plt.xlabel("Number of Tube Hits per Event")
 plt.ylabel("Number of Events")
 plt.savefig(outputFolder+"OverallHitCountDistribution.png")

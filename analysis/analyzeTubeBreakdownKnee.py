@@ -10,25 +10,29 @@ for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
 os.chdir("tubeKneeData")
 
 tubeData = {}
-for dir in glob("data_*"):
+for dir in glob("data_*V"):
     os.chdir(dir)
     tubeHits = {}
     for code in tubeCodes:
         tubeHits[code] = 0
     gonN = 0
-    for gon in glob("*.gon"):
-        gonN += 1
-        with open(gon, "r") as file:
-            # list to be filled with tubehit events
-            tubeHitArray = []
-            # Iterate through every line in the file
-            for line in file:
-                # takes line, removes the trailing \n, then creates a two element list split at the ;
-                data = line[0:-1].split(";")
-                if not (data[1] == "255"):
-                    tubeHits[data[0]] += 1
+    files = ["event"+str(x)+".gon" for x in list(range(32))[1:]]
+    for gon in files:
+        try:
+            with open(gon, "r") as file:
+                # list to be filled with tubehit events
+                tubeHitArray = []
+                # Iterate through every line in the file
+                for line in file:
+                    # takes line, removes the trailing \n, then creates a two element list split at the ;
+                    data = line[0:-1].split(";")
+                    tubeHits[data[0]] += int(data[1])
+            gonN += 1
+        except FileNotFoundError:
+            print("rip "+gon)
     for key in tubeHits.keys():
-        tubeHits[key] /= gonN * 255 * 10 ** (-8)
+        tubeHits[key] /= gonN
+
     tubeData[int(dir[-5:-1])] = tubeHits
     print("Read " + str(gonN) + " gon files for voltage " + str(dir[-5:-1]))
     os.chdir("..")
@@ -36,23 +40,32 @@ for dir in glob("data_*"):
 makeImgDir("kneeImages")
 os.chdir("kneeImages")
 
-for code in tubeCodes:
-    voltages = []
-    hits = []
-    for voltage in sorted(tubeData.keys()):
-        voltages.append(voltage)
-        hits.append(tubeData[voltage][code]*255*10**(-8))
+colors = ['red','orange','green','blue','gold','purple','brown','black']
 
-    print(code + str([str(x) for x in zip(voltages, hits)]))
+for chamber in ['3','4']:
+    for code in tubeCodes:
+        voltages = []
+        hits = []
+        for voltage in sorted(tubeData.keys()):
+            voltages.append(voltage)
+            hits.append(tubeData[voltage][code])
 
-    plt.plot(voltages, hits, "-o")
+        print(code + str([str(x) for x in zip(voltages, hits)]))
 
-    plt.title("Tube " + code + "'s Noise vs Voltage")
-    plt.xlabel("Tube Voltage")
-    plt.ylabel("Average Noise Counts per Event")
-    plt.xlim((min(tubeData.keys()), max(tubeData.keys())))
-    plt.axhline(0.01)
-    plt.ylim((0, 0.1))
+        if code[0] != chamber:
+            continue
 
-    plt.savefig(code + ".png")
+        if code[1] == 'A':
+            ls = "-o"
+        else:
+            ls = "-s"
+        plt.plot(voltages, hits, ls, label=code, color=colors[int(code[2])])
+
+        plt.xlabel("Tube Voltage")
+        plt.ylabel("Average Number of Clock Cycles Before Noise Trigger")
+        plt.xlim((min(tubeData.keys()), max(tubeData.keys())))
+
+    lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.title("Breakdown Knees of Chamber "+chamber+"'s Tubes")
+    plt.savefig("chamber"+chamber + ".png",bbox_extra_artists=(lgd,), bbox_inches="tight")
     plt.cla()
