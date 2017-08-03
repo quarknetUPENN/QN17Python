@@ -1,14 +1,12 @@
 # A script to analyze all data files and produce two graphs of overall system performance
 from glob import glob
-from scipy.special import factorial
-from analysis import outputFolder
-import numpy as np
 
 import matplotlib.pyplot as plt
-from holder import *
+import numpy as np
+from scipy.special import factorial
 
-# ignore these tubes, pretend they never fire
-tubeBlacklist = ["3B3"]
+from analysis import outputFolder
+from holder import *
 
 # a dictionary to record the number of times any given tube gets hit
 tubeHitCounts = {}

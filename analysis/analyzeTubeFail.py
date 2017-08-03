@@ -1,12 +1,10 @@
 from glob import glob
 
 import matplotlib.pyplot as plt
-from numpy import loadtxt
 import numpy as np
+
 from analysis import outputFolder
-
 from holder import *
-
 
 # a dictionary mapping the tube name to a tuple (x,y) of its physical location in x and y
 tubepos = {}

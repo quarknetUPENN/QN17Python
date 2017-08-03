@@ -1,12 +1,10 @@
 from glob import glob
 
+import matplotlib.pyplot as plt
 import numpy as np
 
-import matplotlib.pyplot as plt
 import circlecalc
-import eventdraw
 from holder import *
-
 
 tubepos = {}
 for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
