@@ -60,41 +60,41 @@ for event in analyzableEvents:
     y0 = removedHit.y
     m = bestLine.m
     b = bestLine.b
-    if np.abs(b + m * x0 - y0) / np.sqrt(1 + m ** 2) < 22 * 1e-8 * DRIFT_VELOCITY:
-        measuredDistance.append(removedHit.r)
-        calculatedDistance.append(np.abs(b + m * x0 - y0) / np.sqrt(1 + m ** 2))
-        # ***********************Draw everything********************** #
-        # create the drawing
-        fig, ax = plt.subplots()
-        # draw all tubes if requested
-        for name, pos in tubepos.items():
-            ax.add_artist(plt.Circle(pos, OUTER_RADIUS, fill=False, color='black'))
-            ax.text(pos[0], pos[1], name, size=8, ha="center", va="center", alpha=0.5)
-        # draw all hit circles if requested
-        for hit in event:
-            if hit.r <= 3 * 1e-8 * DRIFT_VELOCITY:
-                ax.add_artist(plt.Circle((hit.x, hit.y), 3 * 1e-8 * DRIFT_VELOCITY, fill=True, color='red', lw=1.5))
-            else:
-                ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='red', lw=1.5))
-        hit = removedHit
-        ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='green', lw=1.5))
 
-        ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MIN_Y, PADDLE_MIN_Y], color='black', lw=10,
-                label="Scintillator Paddle")
-        ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MAX_Y, PADDLE_MAX_Y], color='black', lw=10)
-        # draw the best guess at the particle's track if requested
-        lab, = ax.plot([0, 1], [bestLine.y(0), bestLine.y(1)], color="blue", lw=2)
-        lab.set_label("Best Line")
+    measuredDistance.append(removedHit.r)
+    calculatedDistance.append(np.abs(b + m * x0 - y0) / np.sqrt(1 + m ** 2))
+    # ***********************Draw everything********************** #
+    # create the drawing
+    fig, ax = plt.subplots()
+    # draw all tubes if requested
+    for name, pos in tubepos.items():
+        ax.add_artist(plt.Circle(pos, OUTER_RADIUS, fill=False, color='black'))
+        ax.text(pos[0], pos[1], name, size=8, ha="center", va="center", alpha=0.5)
+    # draw all hit circles if requested
+    for hit in event:
+        if hit.r <= 3 * 1e-8 * DRIFT_VELOCITY:
+            ax.add_artist(plt.Circle((hit.x, hit.y), 3 * 1e-8 * DRIFT_VELOCITY, fill=True, color='red', lw=1.5))
+        else:
+            ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='red', lw=1.5))
+    hit = removedHit
+    ax.add_artist(plt.Circle((hit.x, hit.y), hit.r, fill=False, color='green', lw=1.5))
 
-        # draw legend to right of graph
-        lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MIN_Y, PADDLE_MIN_Y], color='black', lw=10,
+            label="Scintillator Paddle")
+    ax.plot([PADDLE_MIN_X, PADDLE_MAX_X], [PADDLE_MAX_Y, PADDLE_MAX_Y], color='black', lw=10)
+    # draw the best guess at the particle's track if requested
+    lab, = ax.plot([0, 1], [bestLine.y(0), bestLine.y(1)], color="blue", lw=2)
+    lab.set_label("Best Line")
 
-        # size the drawing and save it into the imgDir
-        ax.set_xlim((0.0, 0.7))
-        ax.set_ylim((0.0, 0.7))
-        fig.savefig(str(i)+" "+removedHit.tube + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
-        plt.close(fig)
-        print("Saved " +str(i)+" "+removedHit.tube + ".png\n\r")
+    # draw legend to right of graph
+    lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    # size the drawing and save it into the imgDir
+    ax.set_xlim((0.0, 0.7))
+    ax.set_ylim((0.0, 0.7))
+    fig.savefig(str(i)+" "+removedHit.tube + ".png", bbox_extra_artists=(lgd,), bbox_inches="tight")
+    plt.close(fig)
+    print("Saved " +str(i)+" "+removedHit.tube + ".png\n\r")
 plt.plot([0,0.015],[0,0.015])
 plt.scatter(calculatedDistance, measuredDistance)
 plt.savefig("final.png")

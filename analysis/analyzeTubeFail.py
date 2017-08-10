@@ -21,12 +21,15 @@ tubebxs = []
 # a list of all the possible y coordinates for all tubes
 tubeys = []
 
+tubeAndRadius = {}
+
 # fill all those variables above
 for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubepos[tube[0].decode("utf-8")] = (tube[1], tube[2])
     reverseTubePos[(round(tube[1], 4), round(tube[2], 4))] = tube[0].decode("utf-8")
     tubeFailFreq[tube[0].decode("utf-8")] = 0
     tubeNotFailFreq[tube[0].decode("utf-8")] = 0
+    tubeAndRadius[tube[0].decode("utf-8")] = {}
     if tube[0].decode("utf-8")[1] == 'A':
         tubeaxs.append(tube[1])
     else:
@@ -42,10 +45,9 @@ minxdists = []
 allTubeHits = []
 
 # Move to the directory in which the data files are
-os.chdir(rootDataDir)
+os.chdir("runs16")
 
-
-for dir in glob("data_2017-07-28*"):
+for dir in glob("data_2017-*"):
     os.chdir(dir)
 
     analyzed = {}
@@ -77,7 +79,7 @@ for dir in glob("data_2017-07-28*"):
                     tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
                     allTubeHits.append(tubeHit(xy[0], xy[1], radius, data[0]))
         if len(tubeHitArray) <= 1:
-            print(dir+"\\"+gon[:-4] + " has no real tubehits, skipping")
+            print(dir + "\\" + gon[:-4] + " has no real tubehits, skipping")
             continue
 
         # **********************Get analyzed event data********************** #
@@ -87,7 +89,7 @@ for dir in glob("data_2017-07-28*"):
         try:
             rawTanList, paddleTanList, bestTanLine, bestLine, cost = analyzed[gon]
         except KeyError:
-            print(dir+"\\"+gon[:-4] + " has no valid tanlines, skipping")
+            print(dir + "\\" + gon[:-4] + " has no valid tanlines, skipping")
             continue
 
         # a counter variable to keep track of whether we are on layer a or b as we go through y
@@ -124,9 +126,37 @@ for dir in glob("data_2017-07-28*"):
 
             # look up the tube, and mark that it failed
             tubeFailFreq[reverseTubePos[(xdists[min(xdists.keys())], y)]] += 1
-        print("Processed " + dir+"\\"+gon[:-4])
+        print("Processed " + dir + "\\" + gon[:-4])
     os.chdir("..")
 os.chdir("..")
+
+for key in tubeAndRadius:
+    for n in range(23):
+        tubeAndRadius[key][n] = 0
+
+for tubehit in allTubeHits:
+    tubeAndRadius[tubehit.tube][round(tubehit.r / (DRIFT_VELOCITY * 10 ** (-8)))] += 1
+
+image = [str(x) for x in sorted(tubeAndRadius.keys())]
+for tube in image:
+    image[image.index(tube)] = [tubeAndRadius[tube][rad] for rad in sorted(tubeAndRadius[tube].keys())]
+image.append(list(np.divide(np.sum(image, axis=0), 32)))
+
+plt.imshow(np.array(image), cmap=plt.get_cmap("Greys"), interpolation="none", aspect="equal")
+
+# make the labels on the y axis
+labels = sorted(tubeAndRadius.keys())
+labels.append("SUM")
+plt.barh(np.arange(0, 33, step=1), np.zeros(33), alpha=0, tick_label=labels)
+
+# frame the image properly by definition size
+plt.xlim((-0.5, 22.5))
+plt.ylim((-0.5, 32.5))
+plt.xlabel("Radius in Number of Clock Cycles")
+
+plt.savefig(outputFolder + "thing.png")
+plt.cla()
+plt.clf()
 
 
 # draw the number of recorded tube hits and the number of missed tube hits vs radius of the hit
@@ -139,7 +169,7 @@ plt.hist([round(tubehit.r / (DRIFT_VELOCITY * 10 ** (-8))) for tubehit in allTub
 plt.xlabel("Radius in Clock Cycles")
 plt.ylabel("Number of Events Recorded")
 plt.title("Tube Fail Rate vs Hit Radius")
-plt.xlim((0,25))
+plt.xlim((0, 25))
 plt.legend()
 plt.savefig(outputFolder + "TubeFailRateRadius.png")
 plt.cla()
@@ -147,12 +177,27 @@ plt.cla()
 # draw the fraction of hits missed for each tube
 # ideally, everything is 0.  this tells you how a given tube is performing
 tubeList = []
-triggerList = []
+failList = []
+notFailList = []
+percentList = []
 for key in sorted(tubeFailFreq.keys()):
+    if key in tubeBlacklist:
+        tubeList.append(key)
+        failList.append(0)
+        notFailList.append(0)
+        percentList.append(0)
+        continue
+
     tubeList.append(key)
-    triggerList.append(tubeFailFreq[key]/(tubeNotFailFreq[key]+tubeFailFreq[key]))
-plt.barh(np.arange(len(tubeFailFreq)), triggerList, tick_label=tubeList)
+    failList.append(tubeFailFreq[key])
+    notFailList.append(tubeNotFailFreq[key])
+    percentList.append(tubeFailFreq[key] / (tubeFailFreq[key] + tubeNotFailFreq[key]))
+
+plt.barh(np.arange(len(tubeFailFreq)), percentList, tick_label=tubeList)
+
 plt.xlabel("Fraction of Missed Events")
 plt.ylabel("Tube Code")
 plt.title("Tube Fail Rate vs Tube Code")
 plt.savefig(outputFolder + "TubeFailRateCode.png")
+
+print([str(x) for x in zip(tubeList, failList)])

@@ -21,7 +21,7 @@ for tube in np.loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubeHitCounts[tube[0].decode("utf-8")] = 0
 
 os.chdir(rootDataDir)
-for dir in glob("data_*"):
+for dir in glob("data_2017-*"):
     # Move to the directory in which the data files are
     os.chdir(dir)
 

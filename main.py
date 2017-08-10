@@ -28,9 +28,9 @@ def formatTanline(tanline):
 # requires name to be converted from bytes to strings
 tubePos = loadTubePos()
 
-os.chdir(rootDataDir)
+os.chdir("runs")
 
-for dir in glob("data_2017-07-28*"):
+for dir in glob("data_2017-08-09*"):
     os.chdir(dir)
     # Make the image directory, even if it's not exactly the specified one
     imgDir = makeImgDir(imgDir)

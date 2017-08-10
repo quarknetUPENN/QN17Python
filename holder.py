@@ -8,8 +8,8 @@ from numpy import linspace, loadtxt
 OUTER_RADIUS = 0.0127
 WIRE_RADIUS = 0.00005
 DRIFT_VELOCITY = 60000
-PADDLE_MIN_X = 0.07
-PADDLE_MAX_X = 0.341
+PADDLE_MIN_X = 0.091
+PADDLE_MAX_X = 0.291
 PADDLE_MIN_Y = 0.075
 PADDLE_MAX_Y = 0.652
 
@@ -89,7 +89,7 @@ scanParams = {"m": scanParam(0.2, 10, True),
               "x": scanParam(0.01, 10, True),
               "y": scanParam(0.005, 10, True)}
 # ignore these tubes, pretend they never fire
-tubeBlacklist = ["3B3"]
+tubeBlacklist = ["3A0", "3B3"]
 # the directory that has the timestamped data folders in it
 rootDataDir = "runs/"
 

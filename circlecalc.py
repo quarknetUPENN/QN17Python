@@ -51,7 +51,7 @@ def removeSideTanLines(tanList):
     return newList
 
 # Calculates the distance between any one tubehit and any one tanline
-def __distanceFromTubehitToTanline(tubehit, tanline):
+def distanceFromTubehitToTanline(tubehit, tanline):
     m1 = tanline.m
     b1 = tanline.b
     h = tubehit.x
@@ -72,7 +72,7 @@ def __distanceFromTubehitToTanline(tubehit, tanline):
 # Calculates the cost for any given tanline, given the array of tube hits
 # The formula is simply the average of the distances between the tanline and all the tubehits
 def tanlineCostCalculator(tanline, tubehitArray):
-    cost = [__distanceFromTubehitToTanline(hits, tanline) for hits in tubehitArray]
+    cost = [distanceFromTubehitToTanline(hits, tanline) for hits in tubehitArray]
     return average(cost)
 
 

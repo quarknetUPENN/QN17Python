@@ -9,7 +9,7 @@ tubeCodes = []
 for tube in loadtxt("tubepos.csv", delimiter=",", dtype="S3,f4,f4"):
     tubeCodes.append(tube[0].decode("utf-8"))
 
-os.chdir("knee1")
+os.chdir("kneeSource")
 
 voltageData = {}
 voltageStd = {}
@@ -78,6 +78,7 @@ for chamber in ['3', '4']:
         ax1.plot(voltages, percentChanceNoise, "-x", color='green')
         ax1.set_ylabel("Percent Chance of Noise Before 220ns")
         ax1.axhline(1, color='red')
+        ax1.set_ylim((0,10))
         for i in range(len(voltages)):
             ax.scatter(voltages[i] * np.ones(len(stds[i])), stds[i], alpha=10 / len(stds[i]), color='black')
 
