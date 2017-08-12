@@ -13,8 +13,6 @@ PADDLE_MAX_X = 0.291
 PADDLE_MIN_Y = 0.075
 PADDLE_MAX_Y = 0.652
 
-
-
 # Holder class for an event that triggers a tube
 class tubeHit:
     def __init__(self, x, y, r, tube):
@@ -89,7 +87,7 @@ scanParams = {"m": scanParam(0.2, 10, True),
               "x": scanParam(0.01, 10, True),
               "y": scanParam(0.005, 10, True)}
 # ignore these tubes, pretend they never fire
-tubeBlacklist = ["3A0", "3B3"]
+tubeBlacklist = ["3B3"]
 # the directory that has the timestamped data folders in it
 rootDataDir = "runs/"
 

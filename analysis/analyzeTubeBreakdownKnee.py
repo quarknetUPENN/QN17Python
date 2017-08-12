@@ -50,7 +50,6 @@ makeImgDir("kneeImages")
 os.chdir("kneeImages")
 
 colors = ['red', 'orange', 'green', 'blue', 'gold', 'purple', 'brown', 'black']
-
 for chamber in ['3', '4']:
     for code in tubeCodes:
         voltages = []
@@ -73,12 +72,12 @@ for chamber in ['3', '4']:
         else:
             ls = "-s"
         fig, ax = plt.subplots()
-        ax.plot(voltages, hits, ls, color='blue', alpha=0.5)  # color=colors[int(code[2])]
+        ax.plot(voltages, hits, ls, color=colors[int(code[2])], alpha=0.5)
         ax1 = ax.twinx()
         ax1.plot(voltages, percentChanceNoise, "-x", color='green')
         ax1.set_ylabel("Percent Chance of Noise Before 220ns")
         ax1.axhline(1, color='red')
-        ax1.set_ylim((0,10))
+        ax1.set_ylim((0, 10))
         for i in range(len(voltages)):
             ax.scatter(voltages[i] * np.ones(len(stds[i])), stds[i], alpha=10 / len(stds[i]), color='black')
 

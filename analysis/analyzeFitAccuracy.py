@@ -1,8 +1,9 @@
-from holder import *
 from glob import glob
-import circlecalc
+
 import matplotlib.pyplot as plt
-import numpy as np
+
+import circlecalc
+from holder import *
 
 os.chdir("..")
 tubepos = loadTubePos()
@@ -42,7 +43,7 @@ for dir in glob("data_2017-*"):
                         radius = float(data[1]) * 1e-8 * DRIFT_VELOCITY
                     tubeHitArray.append(tubeHit(xy[0], xy[1], radius, data[0]))
         if not len(tubeHitArray) == 4:
-            #print(dir+"\\"+gon[:-4] + " does not have 4 tubehits, skipping")
+            # print(dir+"\\"+gon[:-4] + " does not have 4 tubehits, skipping")
             continue
 
         # **********************Get analyzed event data********************** #
@@ -52,27 +53,22 @@ for dir in glob("data_2017-*"):
         try:
             rawTanList, paddleTanList, bestTanLine, bestLine, cost = analyzed[gon]
         except KeyError:
-            print(dir+"\\"+gon[:-4] + " has no valid tanlines, skipping")
+            print(dir + "\\" + gon[:-4] + " has no valid tanlines, skipping")
             continue
 
         for tubehit in tubeHitArray:
-            dist = circlecalc.distanceFromTubehitToTanline(tubehit,bestLine)
-            #if dist <= OUTER_RADIUS:
-            allDistances.append(dist)
+            dist = circlecalc.distanceFromTubehitToTanline(tubehit, bestLine)
+            # if dist <= OUTER_RADIUS:
+            allDistances.append(dist / (10 ** -8 * DRIFT_VELOCITY))
 
     os.chdir("..")
 
-std = np.sqrt(np.sum(np.square(allDistances))/(len(allDistances)-1))
-print(std)
-
-print(np.sum([1 if x < OUTER_RADIUS else 0 for x in allDistances]))
-print(np.sum([0 if x < OUTER_RADIUS else 1 for x in allDistances]))
-plt.boxplot(allDistances)
-plt.ylim((0,0.05))
-plt.show()
 os.chdir("../analysis/images")
-plt.hist(allDistances, bins=300)
-plt.xlim((0,0.0127))
+(n, bins, patches) = plt.hist(allDistances, bins=round(max(allDistances)) + 1)
 
+plt.ylim((0, 100))
+plt.title("Magnitude of Error in Line Fit")
+plt.xlabel("Number of Clock Cycles Error")
+plt.ylabel("Number of Events with Given Error")
 plt.savefig("FitAccuracy.png")
-
+print(n)

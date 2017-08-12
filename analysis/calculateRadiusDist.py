@@ -1,6 +1,7 @@
-from holder import *
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+from holder import *
 
 # a dictionary mapping the tube name to a tuple (x,y) of its physical location in x and y
 tubepos = {}
@@ -10,7 +11,6 @@ tubeaxs = []
 tubebxs = []
 # a list of all the possible y coordinates for all tubes
 tubeys = []
-
 
 os.chdir("..")
 # fill all those variables above
@@ -27,15 +27,20 @@ tubeaxs = sorted(list(set(tubeaxs)))
 tubebxs = sorted(list(set(tubebxs)))
 tubeys = sorted(list(set(tubeys)))
 
+# a list to be filled with all the tube hit radii that should have occurred
 mindists = []
 
+# make a random track and add all its theoritical hits to mindists.  10000 times.
 for j in range(10000):
-    x0 = (np.random.rand()*(PADDLE_MAX_X-PADDLE_MIN_X))+PADDLE_MIN_X
-    x1 = (np.random.rand()*(PADDLE_MAX_X-PADDLE_MIN_X))+PADDLE_MIN_X
+    # pick a random point on the upper and lower scintillator paddles
+    x0 = (np.random.rand() * (PADDLE_MAX_X - PADDLE_MIN_X)) + PADDLE_MIN_X
+    x1 = (np.random.rand() * (PADDLE_MAX_X - PADDLE_MIN_X)) + PADDLE_MIN_X
 
-    m = (PADDLE_MAX_Y-PADDLE_MIN_Y)/(x1-x0)
-    b = PADDLE_MAX_Y - m*x1
+    # find the m and b for a line between those two above points.  this is a simulated random cosmic ray
+    m = (PADDLE_MAX_Y - PADDLE_MIN_Y) / (x1 - x0)
+    b = PADDLE_MAX_Y - m * x1
 
+    # go through and figure out which tubes should have fired.  see analyzeTubeFail for an in depth explanation
     i = 0
     for y in tubeys:
         i += 1
@@ -48,9 +53,14 @@ for j in range(10000):
         xdists = {}
         for x in tubexs:
             xdists[(np.abs(b + m * x - y) / np.sqrt(1 + m ** 2))] = x
-        # record the closest distance found
-        if not min(xdists.keys()) > OUTER_RADIUS:
-            mindists.append(min(xdists.keys()))
 
-plt.hist(mindists,bins=100)
-plt.show()
+        # record the closest distance found if it's within a radius
+        if not min(xdists.keys()) > OUTER_RADIUS:
+            mindists.append(min(xdists.keys()) / (10 ** -8 * DRIFT_VELOCITY))
+
+# draw, label, and save a histogram
+plt.hist(mindists, bins=22)
+plt.title("Expected Distribution of Tube Hit Radii")
+plt.xlabel("Radius, in Clock Cycles")
+plt.ylabel("Number of Hits")
+plt.savefig("analysis/images/simulatedRadiusDist.png")
